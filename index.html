@@ -170,6 +170,7 @@ h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance
 .lb{width:100%;border-collapse:collapse;font-size:.95rem}
 .lb th,.lb td{border-bottom:1px solid #d8ceb6;padding:8px 6px;text-align:left}
 .lb td.num{font-family:var(--f-mono);text-align:right}
+.lb th.num{text-align:right}
 .win{color:#2c7a43;font-weight:700}.lose{color:#b23a2f;font-weight:700}
 .debrief{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem}
@@ -2917,7 +2918,7 @@ function localFinalHTML(){const cs=CASES[G.cfg.caseId-1];const ctx=G.cfg;
   return `<div class="paper"><h2>Итоги партии</h2><p>Дело ${cs.name}: организатор — <b>${esc(ORGS[cs.org])}</b>, цель — <b>${esc(GOALS[cs.goal])}</b>.</p>${standingsTable(rows.map(r=>({name:r.u.name,color:r.u.color,pts:r.u.pts,rep:r.u.rep,clues:r.u.clues,out:r.u.out,solved:r.solved,won:r.win})),G.cfg.threshold)}</div>
   <h2 class="onfelt">Дебрифинг</h2><div class="debrief">${G.teams.map((u,i)=>debriefHTML(u,HL.unitStats(u),u.name,`<span class="tag" style="background:${u.color};color:#fff">${HL.won(u,ctx)?'победа':'разбор'}</span>`,{refl:'local'+i})).join('')}</div>
   <p><button class="btn y" data-a="newgame">Новая игра</button></p>`}
-function standingsTable(rows,thr){return `<div class="tblwrap"><table class="lb"><thead><tr><th>#</th><th>Участник</th><th>Очки</th><th>Репутация</th><th>Улики</th><th>Дело</th><th>Итог</th></tr></thead><tbody>
+function standingsTable(rows,thr){return `<div class="tblwrap"><table class="lb"><thead><tr><th class="num">#</th><th>Участник</th><th class="num">Очки</th><th class="num">Репутация</th><th class="num">Улики</th><th>Дело</th><th>Итог</th></tr></thead><tbody>
   ${rows.map((r,i)=>`<tr><td class="num">${i+1}</td><td><span class="sw" style="background:${r.color}"></span>${esc(r.name)}</td><td class="num">${r.pts}/${thr}</td><td class="num">${r.rep}</td><td class="num">${r.clues}/5</td><td>${r.out?'—':r.solved?'раскрыто':'нет'}</td><td class="${r.won?'win':'lose'}">${r.won?'Победа':r.out?'Банкротство доверия':'Поражение'}</td></tr>`).join('')}</tbody></table></div>`}
 
 /* ======================= ОНЛАЙН: СЕТЬ ======================= */
@@ -2929,7 +2930,8 @@ function connect(params){if(ES)ES.close();
   ES.onmessage=e=>{try{S=JSON.parse(e.data);timeOffset=S.now-Date.now();UI.conn=true;render()}catch(err){}};
   ES.onerror=()=>{UI.conn=false;renderConn()};
 }
-function renderConn(){const el=document.getElementById('conn');if(el)el.hidden=!!UI.conn}
+// плашка «нет связи» — только после реального обрыва потока, а не до первого подключения
+function renderConn(){const el=document.getElementById('conn');if(el)el.hidden=UI.conn!==false}
 function hostCreds(){return lsGet('hamlet21-host')}
 function hostAct(type,v){const h=hostCreds();if(!h)return;api('/api/act',{room:h.code,role:'host',key:h.key,type,v}).catch(e=>{UI.err=e.message;render()})}
 function playerCreds(){return lsGet('hamlet21-player-'+(qs.get('room')||'').toUpperCase())}
